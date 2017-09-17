@@ -9,14 +9,23 @@ class TimeStamp:
         self.t_from = t_from
         self.t_to = t_to
     def to_sec(self, t):
-        mins = int(t.split(':')[0])
-        seconds = int(t.split(':')[1])
-        return mins * 60 + seconds
+        if len(t) == 5:
+            m, s = t.split(':')
+            return int(m) * 60 + int(s)
+        elif len(t) == 8:
+            h, m, s = t.split(':')
+            return int(h) * 3600 + int(m) * 60 + int(s)
+        else:
+            print('Wrong time format')
     def add(self):
         add_time = self.to_sec(self.t_from) + self.to_sec(self.t_to)
         new_min, new_sec = divmod(add_time, 60)
         return str(new_min).zfill(2) + ':' + str(new_sec).zfill(2)
+    def to_mins(self):
+        new_min, new_sec = divmod(self.to_sec(self.t_to), 60)
+        return str(new_min).zfill(2) + ':' + str(new_sec).zfill(2)
 
+source_type = input('Type of source audio (single or multiple files) [S/M]: ')
 file_name = input('File name: ')
 performer = input('Performer: ')
 title = input('Title: ')
@@ -32,11 +41,18 @@ with open(os.path.join(work_dir, cue_name), 'a') as file:
         if track_title == '':
             break
         track_time = input(f'{n} Track time: ')
-        new = TimeStamp(t, track_time)
-        t = new.add()
+        if source_type.upper() == 'S':
+            new = TimeStamp('00:00:00', track_time)
+            t = new.to_mins()
+        elif source_type.upper() == 'M':
+            new = TimeStamp(t, track_time)
+            t = new.add()
+        else:
+            print('Wrong source type')
+            break
         tr = t + ':00'
         file.write(f'  TRACK {tn} AUDIO\n')
         file.write(f'    PERFORMER \"{performer}\"\n')
         file.write(f'    TITLE \"{track_title}\"\n')
         file.write(f'    INDEX 01 {tr}\n')
-        tn += 1
+        n += 1
